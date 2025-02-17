@@ -1,0 +1,10 @@
+
+
+
+<resources>
+    <string name="app_name">ChatSphere</string>
+    <string name="facebook_app_id">1170082561375022</string>
+    <string name="fb_login_protocol_scheme">fb1170082561375022</string>
+    <string name="facebook_client_token">d840b3812fcc0a7a628293cc9306b6ed</string>
+
+</resources>

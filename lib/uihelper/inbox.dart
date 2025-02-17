@@ -3,6 +3,9 @@ import 'package:chat_sphere/Services/message_Service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../State_Management/Theme_Provider.dart';
 
 class Inbox extends StatefulWidget {
 
@@ -34,6 +37,7 @@ class _InboxState extends State<Inbox> {
 
   @override
   Widget build(BuildContext context) {
+    var themeProvider = Provider.of<Theme_Provider>(context, listen: true);
     double Total_height=MediaQuery.of(context).size.height;
     double Total_width=MediaQuery.of(context).size.width;
 
@@ -44,7 +48,7 @@ class _InboxState extends State<Inbox> {
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         shadowColor: Colors.white,
-        elevation: 0,
+        elevation: 10,
         title: Text(widget.reciever, style: TextStyle(fontSize: 25,color: Colors.black),),
       ),
       body: Stack(
@@ -100,6 +104,7 @@ class _InboxState extends State<Inbox> {
 
       ],),
       bottomNavigationBar: BottomAppBar(
+
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
@@ -121,7 +126,7 @@ class _InboxState extends State<Inbox> {
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.send,size: 27,color: Colors.purple.shade700,),
+                icon: Icon(Icons.send,size: 27,color: themeProvider.getThemeColor(),),
                 onPressed: () async {
                   await sendMessage(widget.recieverID, message.text.toString(),widget.recieverEmail);
                   message.clear();

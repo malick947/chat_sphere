@@ -1,8 +1,10 @@
+import 'package:chat_sphere/Database/Database.dart';
 import 'package:chat_sphere/Services/login_service.dart';
 import 'package:chat_sphere/authentication/signup.dart';
 import 'package:chat_sphere/uihelper/Chats.dart';
 import 'package:chat_sphere/uihelper/widgets.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:get/get.dart';
@@ -17,39 +19,49 @@ class Signin extends StatefulWidget {
 }
 
 class _SigninState extends State<Signin> {
+
+  FirebaseAuth _auth=FirebaseAuth.instance;
+
   bool loading =false;
 
-  FirebaseAuth _auth = FirebaseAuth.instance;
+  
   final _formkey = GlobalKey<FormState>();
   var email = TextEditingController();
   var password = TextEditingController();
 
-  void login() {
-    if (_formkey.currentState!.validate()) {
+  Future<void> login() async {
+    if (!_formkey.currentState!.validate()) return;
+
+    try {
+      setState(() {
+        loading = true;
+      });
+
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email.text.trim(),
+        password: password.text.trim(),
+      );
 
       setState(() {
-        loading=true;
+        loading = false;
       });
-      _auth
-          .signInWithEmailAndPassword(
-          email: email.text.trim(), password: password.text.trim())
-          .then((value) {
-            setState(() {
-              loading=false;
-            });
-        Get.off(Chats());
-      }).catchError((error) {
 
-        setState(() {
-          loading=false;
-        });
-        Get.snackbar('Login Error', error.message,
-            backgroundColor: Colors.purple.shade500,
-             colorText: Colors.white,
-             icon: Icon(Icons.error));
+      Get.off(Chats(LoginedUser: userCredential.user!));
+    } catch (error) {
+      setState(() {
+        loading = false;
       });
+
+      Get.snackbar(
+        'Login Error',
+        error.toString(),
+        backgroundColor: Colors.purple.shade500,
+        colorText: Colors.white,
+        icon: Icon(Icons.error),
+      );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -153,9 +165,9 @@ class _SigninState extends State<Signin> {
                                 padding: const EdgeInsets.all(12.0),
                                 child: RoundButton(
                                   text: 'SignIn',
-                                  onTap: () {
+                                  onTap: () async {
                                     if (_formkey.currentState!.validate()) {
-                                      login();
+                                     await login();
                                     }
                                   },
                                   loading: loading,

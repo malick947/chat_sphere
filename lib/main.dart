@@ -1,6 +1,9 @@
+import 'package:chat_sphere/Database/Database.dart';
 import 'package:chat_sphere/Splash_Screen.dart';
+import 'package:chat_sphere/State_Management/Theme_Provider.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'package:get/get.dart';
 void main() async {
@@ -8,7 +11,9 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,);
 
-  runApp(const MyApp());
+  runApp(MultiProvider(providers: [
+    ChangeNotifierProvider(create: (context) => Theme_Provider(),)
+  ],child: MyApp(),));
 }
 
 class MyApp extends StatelessWidget {
@@ -17,10 +22,13 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    var themeProvider = Provider.of<Theme_Provider>(context, listen: true);
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
+
       theme: ThemeData(
+
         // This is the theme of your application.
         //
         // TRY THIS: Try running your application with "flutter run". You'll see
@@ -36,7 +44,9 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: themeProvider.getThemeColor()),
+        primaryColor: themeProvider.getThemeColor(),
+
         useMaterial3: true,
       ),
       home: SplashScreen(),

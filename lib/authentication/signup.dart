@@ -1,4 +1,5 @@
 
+import 'package:chat_sphere/Database/Database.dart';
 import 'package:chat_sphere/authentication/signin.dart';
 import 'package:chat_sphere/uihelper/Chats.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -17,6 +18,7 @@ class Signup extends StatefulWidget {
 
 class _SignupState extends State<Signup> {
   FirebaseAuth _auth=FirebaseAuth.instance;
+  DBhelper database=DBhelper.getInstance;
 
   var _formkey = GlobalKey<FormState>();
   var email = TextEditingController();
@@ -42,6 +44,7 @@ class _SignupState extends State<Signup> {
 
     try {
       FirebaseAuth _auth=FirebaseAuth.instance;
+
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: email.text.trim(),
         password: password.text.trim(),
@@ -53,6 +56,11 @@ class _SignupState extends State<Signup> {
       setState(() {
         loading = false;
       });
+      // adding into database
+      database.addUser(UID: _auth.currentUser!.uid.toString(),
+          Email: email.text.toString(),
+          username: username.text.toString(),
+          password: password.text.toString());
 
       Get.snackbar(
         "User Created",
@@ -63,7 +71,7 @@ class _SignupState extends State<Signup> {
         colorText: Colors.white
       );
 
-      Get.off(Chats(),transition: Transition.fadeIn,duration: Duration(seconds: 1));
+      Get.off(Chats(LoginedUser: userCredential.user!,),transition: Transition.fadeIn,duration: Duration(seconds: 1));
     } catch (e) {
       setState(() {
         loading = false;

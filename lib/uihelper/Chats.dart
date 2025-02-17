@@ -1,6 +1,8 @@
+import 'package:chat_sphere/Services/Settings.dart';
 import 'package:chat_sphere/Services/login_service.dart';
 import 'package:chat_sphere/Services/message_Service.dart';
 import 'package:chat_sphere/Splash_Screen.dart';
+import 'package:chat_sphere/State_Management/Theme_Provider.dart';
 import 'package:chat_sphere/authentication/signin.dart';
 import 'package:chat_sphere/uihelper/Contacts.dart';
 import 'package:chat_sphere/uihelper/chatbubble.dart';
@@ -9,11 +11,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 import 'inbox.dart';
 
 
 class Chats extends StatefulWidget {
-  const Chats({super.key});
+  User? LoginedUser;
+  Chats({required User this.LoginedUser});
 
   @override
   State<Chats> createState() => _ChatsState();
@@ -21,18 +25,20 @@ class Chats extends StatefulWidget {
 
 
 class _ChatsState extends State<Chats> {
+  User? logUser;
+  bool isDataLoaded=false;
   FirebaseAuth _auth=FirebaseAuth.instance;
-  User? currentUser;
+  late var myusers;
 
-  final myusers=FirebaseFirestore.instance.collection('Users').snapshots();
 
-  User? CurrentUser(){
-    if(_auth.currentUser!=null){
-      currentUser=_auth.currentUser;
+  Future<void> GetChatData() async {
+    myusers=await FirebaseFirestore.instance.collection('Users').snapshots();
 
-    }
-    return currentUser;
+        setState(() {
+          isDataLoaded=true;
+        });
   }
+
 
 
 
@@ -41,17 +47,20 @@ class _ChatsState extends State<Chats> {
   void initState() {
     // TODO: implement initState
     super.initState();
-
+    logUser=widget.LoginedUser;
+    GetChatData();
 
 
 
   }
   @override
   Widget build(BuildContext context) {
+    var themeProvider = Provider.of<Theme_Provider>(context, listen: true);
     return Scaffold(
       appBar: AppBar(
+
         foregroundColor: Colors.white,
-        backgroundColor: Colors.purple.shade700,
+        backgroundColor: themeProvider.color,
         title: Text("Chats" , style: TextStyle(fontWeight: FontWeight.bold,fontSize: 27),),
         centerTitle: true,
       ),
@@ -61,13 +70,13 @@ class _ChatsState extends State<Chats> {
           children: <Widget>[
             DrawerHeader(
               decoration: BoxDecoration(
-                color: Colors.purple.shade700, // Background color of the header
+                color: themeProvider.getThemeColor(), // Background color of the header
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'ChartSphere',
+                    'ChatSphere',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 24,
@@ -82,27 +91,28 @@ class _ChatsState extends State<Chats> {
             ),
 
             ListTile(
-              leading: Icon(Icons.settings, size: 35,color: Colors.purple.shade700,),
-              title: Text('Settings',style: TextStyle(fontSize: 20,color: Colors.purple.shade700),),
+              leading: Icon(Icons.settings, size: 35,color: themeProvider.getThemeColor(),),
+              title: Text('Settings',style: TextStyle(fontSize: 20,color: themeProvider.getThemeColor()),),
               onTap: () {
                 // Close the drawer and perform action
-
+                  Get.to(Setting());
               },
-              
+
             ),
             ListTile(
-              leading: Icon(Icons.account_box,color: Colors.purple.shade700,size: 35,),
-              title: Text("Me",style: TextStyle(fontSize: 20,color: Colors.purple.shade700)),
+              leading: Icon(Icons.account_box,color: themeProvider.getThemeColor(),size: 35,),
+              title: Text("Me",style: TextStyle(fontSize: 20,color: themeProvider.getThemeColor())),
               onTap: (){
-                  Get.to(SplashScreen());
+
+                debugPrint(themeProvider.color.toString());  // Ensure `color` is a valid property
               },
             ),
-            
+
 
             Divider(), // Optional divider
             ListTile(
-              leading: Icon(Icons.exit_to_app,size: 35,color: Colors.purple.shade700,),
-              title: Text('Logout',style: TextStyle(fontSize: 20,color: Colors.purple.shade700),),
+              leading: Icon(Icons.exit_to_app,size: 35,color: themeProvider.getThemeColor(),),
+              title: Text('Logout',style: TextStyle(fontSize: 20,color: themeProvider.getThemeColor()),),
               onTap: () {
                 // Close the drawer and perform action
                 logout();
@@ -112,8 +122,9 @@ class _ChatsState extends State<Chats> {
         ),
       ),
       body:Container(
+
         child: Center(
-          child: StreamBuilder(
+          child:isDataLoaded ?  StreamBuilder(
             stream: myusers,
             builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
               if(snapshot.hasError){
@@ -128,7 +139,7 @@ class _ChatsState extends State<Chats> {
                 String email=snapshot.data!.docs[index]['email'];
                 String id=snapshot.data!.docs[index]['uid'];
 
-                if(snapshot.data!.docs[index]['email'] == CurrentUser()!.email.toString()){
+                if(snapshot.data!.docs[index]['email'] == logUser!.email.toString()){
                   return SizedBox(height: 0,);
                 }
 
@@ -154,7 +165,7 @@ class _ChatsState extends State<Chats> {
 
                 itemCount: snapshot.data!.docs.length,);
 
-            },),
+            },) : CircularProgressIndicator()
         ),
       ),
 
